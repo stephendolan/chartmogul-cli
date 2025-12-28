@@ -44,6 +44,7 @@ The CLI follows a command-based architecture built on Commander.js:
   - **errors.ts**: Centralized error handling for ChartMogul API errors
   - **command-utils.ts**: Shared command helpers (`withErrorHandling`)
   - **dates.ts**: Date parsing and validation utilities
+  - **utils.ts**: Currency conversion (cents to dollars)
 - **src/types/**: TypeScript type definitions
 
 ### Authentication Flow
@@ -58,8 +59,9 @@ ChartMogul uses Basic Auth with API key:
 ### Output System
 
 All commands use `outputJson()` from src/lib/output.ts which:
-1. Formats as JSON (pretty or compact based on `--compact` flag)
-2. Writes to stdout
+1. Converts monetary values from cents to dollars (MRR, ARR, amounts, etc.)
+2. Formats as JSON (pretty or compact based on `--compact` flag)
+3. Writes to stdout
 
 ### Error Handling
 
