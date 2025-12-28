@@ -98,6 +98,8 @@ chartmogul metrics mrr                    # Pretty-printed JSON
 chartmogul -c metrics mrr                 # Compact JSON (single line)
 ```
 
+**Monetary values are in dollars** (not ChartMogul's internal cents). An MRR of `100` means $100.
+
 Errors are also returned as JSON:
 
 ```json

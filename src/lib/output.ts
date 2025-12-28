@@ -1,4 +1,5 @@
 import type { OutputOptions } from '../types/index.js';
+import { convertCentsToDollars } from './utils.js';
 
 let globalOutputOptions: OutputOptions = {};
 
@@ -7,9 +8,12 @@ export function setOutputOptions(options: OutputOptions): void {
 }
 
 export function outputJson(data: unknown, options: OutputOptions = {}): void {
+  const convertedData = convertCentsToDollars(data);
   const mergedOptions = { ...globalOutputOptions, ...options };
 
-  const jsonString = mergedOptions.compact ? JSON.stringify(data) : JSON.stringify(data, null, 2);
+  const jsonString = mergedOptions.compact
+    ? JSON.stringify(convertedData)
+    : JSON.stringify(convertedData, null, 2);
 
   console.log(jsonString);
 }
