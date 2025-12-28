@@ -14,170 +14,94 @@ A command-line interface for ChartMogul analytics, designed for developers and L
 
 ## Installation
 
-### From npm (recommended)
-
 ```bash
 npm install -g @stephendolan/chartmogul-cli
-# or
-bun install -g @stephendolan/chartmogul-cli
 ```
 
-### From source
-
-```bash
-git clone https://github.com/stephendolan/chartmogul-cli.git
-cd chartmogul-cli
-bun install
-bun run link
-```
-
-### Linux prerequisites
-
-On Linux, install libsecret for keychain support:
-
-```bash
-sudo apt-get install libsecret-1-dev
-```
+On Linux, install libsecret for keychain support: `sudo apt-get install libsecret-1-dev`
 
 ## Authentication
 
-### Using API Key (recommended)
-
 ```bash
-# Store API key in OS keychain
 chartmogul auth login --api-key YOUR_API_KEY
-
-# Check authentication status
 chartmogul auth status
-
-# Remove stored credentials
 chartmogul auth logout
 ```
 
-### Using environment variable
+Or use the environment variable: `export CHARTMOGUL_API_KEY=your_api_key`
 
-```bash
-export CHARTMOGUL_API_KEY=your_api_key
-```
+Get your API key from ChartMogul: Profile -> API Keys
 
-Get your API key from ChartMogul: Profile → API Keys
-
-## Usage
-
-### Account
-
-```bash
-# View account details
-chartmogul account view
-```
+## Commands
 
 ### Metrics
 
+All metric commands support `--start-date`, `--end-date`, and `--interval` (day, week, month, quarter).
+
 ```bash
-# Get all metrics (last 30 days by default)
-chartmogul metrics all
+chartmogul metrics all                    # All key metrics (last 30 days)
+chartmogul metrics mrr                    # Monthly Recurring Revenue
+chartmogul metrics arr                    # Annual Recurring Revenue
+chartmogul metrics arpa                   # Average Revenue Per Account
+chartmogul metrics asp                    # Average Sale Price
+chartmogul metrics customer-count         # Customer count over time
+chartmogul metrics customer-churn         # Customer churn rate
+chartmogul metrics mrr-churn              # MRR churn rate
+chartmogul metrics ltv                    # Customer Lifetime Value
 
-# MRR (Monthly Recurring Revenue)
-chartmogul metrics mrr
-chartmogul metrics mrr --start-date 2024-01-01 --end-date 2024-12-31
-
-# ARR (Annual Recurring Revenue)
-chartmogul metrics arr --interval month
-
-# ARPA (Average Revenue Per Account)
-chartmogul metrics arpa
-
-# ASP (Average Sale Price)
-chartmogul metrics asp
-
-# Customer count
-chartmogul metrics customer-count
-
-# Customer churn rate
-chartmogul metrics customer-churn
-
-# MRR churn rate
-chartmogul metrics mrr-churn
-
-# LTV (Customer Lifetime Value)
-chartmogul metrics ltv
+# With date range
+chartmogul metrics mrr --start-date 2024-01-01 --end-date 2024-12-31 --interval month
 ```
 
 ### Customers
 
 ```bash
-# List customers
-chartmogul customers list
-chartmogul customers list --status Active
-chartmogul customers list --data-source <uuid>
-
-# View a customer
-chartmogul customers view <uuid>
-
-# Search by email
+chartmogul customers list                      # List all customers
+chartmogul customers list --status Active      # Filter by status
+chartmogul customers view <uuid>               # View customer details
 chartmogul customers search --email user@example.com
-
-# View customer activities
-chartmogul customers activities <uuid>
-
-# View customer subscriptions
-chartmogul customers subscriptions <uuid>
+chartmogul customers activities <uuid>         # Customer activities
+chartmogul customers subscriptions <uuid>      # Customer subscriptions
 ```
 
-### Plans
+### Other Resources
 
 ```bash
-# List plans
+# Account
+chartmogul account view
+
+# Plans
 chartmogul plans list
-
-# View a plan
 chartmogul plans view <uuid>
-```
 
-### Invoices
-
-```bash
-# List invoices
+# Invoices
 chartmogul invoices list
 chartmogul invoices list --customer <uuid>
-
-# View an invoice
 chartmogul invoices view <uuid>
-```
 
-### Data Sources
-
-```bash
-# List data sources
+# Data Sources
 chartmogul data-sources list
-
-# View a data source
 chartmogul data-sources view <uuid>
-
-# Set default data source for filtering
 chartmogul data-sources set-default <uuid>
-```
 
-### Activities
-
-```bash
-# List activities
+# Activities
 chartmogul activities list
-chartmogul activities list --type new_biz
-chartmogul activities list --start-date 2024-01-01 --end-date 2024-12-31
+chartmogul activities list --type new_biz --start-date 2024-01-01
 ```
 
-## Output Formatting
+## Output
 
-All commands output JSON by default:
+All commands output JSON. Use `--compact` or `-c` for single-line output:
 
 ```bash
-# Pretty-printed JSON (default)
-chartmogul metrics mrr
+chartmogul metrics mrr                    # Pretty-printed JSON
+chartmogul -c metrics mrr                 # Compact JSON (single line)
+```
 
-# Compact JSON (single line)
-chartmogul -c metrics mrr
-chartmogul --compact customers list
+Errors are also returned as JSON:
+
+```json
+{"error": {"name": "unauthorized", "detail": "Invalid API key", "statusCode": 401}}
 ```
 
 ## Environment Variables
@@ -186,52 +110,6 @@ chartmogul --compact customers list
 |----------|-------------|
 | `CHARTMOGUL_API_KEY` | API key (alternative to keychain) |
 | `CHARTMOGUL_DATA_SOURCE` | Default data source UUID |
-
-## Common Patterns
-
-### Get current MRR
-
-```bash
-chartmogul metrics mrr --start-date $(date +%Y-%m-%d) --end-date $(date +%Y-%m-%d)
-```
-
-### Get monthly MRR trend
-
-```bash
-chartmogul metrics mrr --start-date 2024-01-01 --end-date 2024-12-31 --interval month
-```
-
-### Find high-value customers
-
-```bash
-chartmogul customers list | jq '.entries | sort_by(.mrr) | reverse | .[0:10]'
-```
-
-### Get churn analysis
-
-```bash
-chartmogul metrics customer-churn --start-date 2024-01-01 --end-date 2024-12-31 --interval month
-```
-
-### View recent activities
-
-```bash
-chartmogul activities list --type churn --start-date 2024-12-01
-```
-
-## Error Handling
-
-Errors are returned as JSON:
-
-```json
-{
-  "error": {
-    "name": "unauthorized",
-    "detail": "Invalid API key",
-    "statusCode": 401
-  }
-}
-```
 
 ## License
 
