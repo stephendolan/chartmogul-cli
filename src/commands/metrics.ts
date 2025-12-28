@@ -1,14 +1,8 @@
 import { Command } from 'commander';
-import dayjs from 'dayjs';
 import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
 import { withErrorHandling } from '../lib/command-utils.js';
-
-function getDefaultDateRange(): { startDate: string; endDate: string } {
-  const endDate = dayjs().format('YYYY-MM-DD');
-  const startDate = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
-  return { startDate, endDate };
-}
+import { getDefaultDateRange, parseDate } from '../lib/dates.js';
 
 interface MetricOptions {
   startDate?: string;
@@ -19,8 +13,8 @@ interface MetricOptions {
 function buildMetricParams(options: MetricOptions) {
   const defaults = getDefaultDateRange();
   return {
-    'start-date': options.startDate || defaults.startDate,
-    'end-date': options.endDate || defaults.endDate,
+    'start-date': options.startDate ? parseDate(options.startDate) : defaults.startDate,
+    'end-date': options.endDate ? parseDate(options.endDate) : defaults.endDate,
     interval: options.interval,
   };
 }
