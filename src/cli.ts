@@ -10,6 +10,7 @@ import { createPlansCommand } from './commands/plans.js';
 import { createInvoicesCommand } from './commands/invoices.js';
 import { createMetricsCommand } from './commands/metrics.js';
 import { createActivitiesCommand } from './commands/activities.js';
+import { createMcpCommand } from './commands/mcp.js';
 
 declare const __VERSION__: string | undefined;
 
@@ -37,6 +38,7 @@ program.addCommand(createPlansCommand());
 program.addCommand(createInvoicesCommand());
 program.addCommand(createMetricsCommand());
 program.addCommand(createActivitiesCommand());
+program.addCommand(createMcpCommand());
 
 program.parseAsync().catch(() => {
   process.exit(1);
