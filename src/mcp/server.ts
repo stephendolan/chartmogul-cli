@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { client } from '../lib/api-client.js';
 import { auth } from '../lib/auth.js';
+import { convertCentsToDollars } from '../lib/utils.js';
 
 const server = new McpServer({
   name: 'chartmogul',
@@ -10,7 +11,8 @@ const server = new McpServer({
 });
 
 function jsonResponse(data: unknown) {
-  return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] };
+  const converted = convertCentsToDollars(data);
+  return { content: [{ type: 'text' as const, text: JSON.stringify(converted, null, 2) }] };
 }
 
 const dateRangeSchema = {
