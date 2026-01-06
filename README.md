@@ -18,7 +18,7 @@ A command-line interface for ChartMogul analytics, designed for developers and L
 npm install -g @stephendolan/chartmogul-cli
 ```
 
-On Linux, install libsecret for keychain support: `sudo apt-get install libsecret-1-dev`
+**Linux**: Install libsecret for keychain support: `sudo apt-get install libsecret-1-dev`
 
 ## Authentication
 
@@ -30,7 +30,7 @@ chartmogul auth logout
 
 Or use the environment variable: `export CHARTMOGUL_API_KEY=your_api_key`
 
-Get your API key from ChartMogul: Profile -> API Keys
+Get your API key from ChartMogul under Profile -> API Keys.
 
 ## Commands
 
@@ -58,6 +58,7 @@ chartmogul metrics mrr --start-date 2024-01-01 --end-date 2024-12-31 --interval 
 ```bash
 chartmogul customers list                      # List all customers
 chartmogul customers list --status Active      # Filter by status
+chartmogul customers list --data-source <uuid> # Filter by data source
 chartmogul customers view <uuid>               # View customer details
 chartmogul customers search --email user@example.com
 chartmogul customers activities <uuid>         # Customer activities
@@ -83,10 +84,20 @@ chartmogul invoices view <uuid>
 chartmogul data-sources list
 chartmogul data-sources view <uuid>
 chartmogul data-sources set-default <uuid>
+chartmogul data-sources get-default
 
 # Activities
 chartmogul activities list
 chartmogul activities list --type new_biz --start-date 2024-01-01
+# Activity types: new_biz, expansion, contraction, churn, reactivation
+```
+
+### MCP Server
+
+Run as an MCP server for AI agent integration:
+
+```bash
+chartmogul mcp
 ```
 
 ## Output
