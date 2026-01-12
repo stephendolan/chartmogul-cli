@@ -14,6 +14,9 @@ const CENTS_FIELDS = new Set([
   'activity_mrr',
   'activity_arr',
   'activity_mrr_movement',
+  'activity-mrr',
+  'activity-arr',
+  'activity-mrr-movement',
   'new-biz',
   'expansion',
   'contraction',
@@ -25,6 +28,10 @@ function isCentsField(fieldName: string): boolean {
   return CENTS_FIELDS.has(fieldName) || fieldName.endsWith('_in_cents');
 }
 
+function normalizeFieldName(fieldName: string): string {
+  return fieldName.replace(/_in_cents$/, '');
+}
+
 export function convertCentsToDollars(data: unknown): unknown {
   if (data === null || data === undefined) return data;
   if (Array.isArray(data)) return data.map(convertCentsToDollars);
@@ -33,7 +40,7 @@ export function convertCentsToDollars(data: unknown): unknown {
   const converted: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
     if (isCentsField(key) && typeof value === 'number') {
-      converted[key] = centsToDollars(value);
+      converted[normalizeFieldName(key)] = centsToDollars(value);
     } else {
       converted[key] = convertCentsToDollars(value);
     }
