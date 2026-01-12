@@ -96,9 +96,15 @@ server.tool(
       .describe('Activity type filter'),
     page: z.number().optional().describe('Page number'),
     perPage: z.number().optional().describe('Results per page'),
+    enrich: z.boolean().optional().describe('Include customer tenure data (customer-since, customer-tenure-months)'),
   },
-  async ({ startDate, endDate, type, page, perPage }) =>
-    jsonResponse(await client.listActivities({ 'start-date': startDate, 'end-date': endDate, type, page, per_page: perPage }))
+  async ({ startDate, endDate, type, page, perPage, enrich }) => {
+    const params = { 'start-date': startDate, 'end-date': endDate, type, page, per_page: perPage };
+    const result = enrich
+      ? await client.listActivitiesEnriched(params)
+      : await client.listActivities(params);
+    return jsonResponse(result);
+  }
 );
 
 server.tool(
@@ -113,6 +119,13 @@ server.tool(
   'Get detailed information about a specific customer',
   { uuid: z.string().describe('Customer UUID') },
   async ({ uuid }) => jsonResponse(await client.getCustomer(uuid))
+);
+
+server.tool(
+  'get_customers_batch',
+  'Get detailed information about multiple customers in one call',
+  { uuids: z.array(z.string()).describe('Array of customer UUIDs') },
+  async ({ uuids }) => jsonResponse(await client.getCustomersBatch(uuids))
 );
 
 server.tool(

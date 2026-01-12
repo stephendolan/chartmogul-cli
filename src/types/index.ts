@@ -39,6 +39,7 @@ export interface Customer {
   free_trial_started_at?: string;
   status: string;
   customer_since?: string;
+  'customer-since'?: string;
   mrr: number;
   arr: number;
   billing_system_url?: string;
@@ -105,11 +106,11 @@ export interface LineItem {
   prorated?: boolean;
   service_period_start: string;
   service_period_end: string;
-  amount_in_cents: number;
+  amount: number;
   quantity?: number;
   discount_code?: string;
-  discount_amount_in_cents?: number;
-  tax_amount_in_cents?: number;
+  discount_amount?: number;
+  tax_amount?: number;
   account_code?: string;
 }
 
@@ -148,11 +149,20 @@ export interface Activity {
   date: string;
   type: string;
   description: string;
-  activity_mrr: number;
-  activity_mrr_movement: number;
-  activity_arr: number;
+  'activity-mrr': number;
+  'activity-mrr-movement': number;
+  'activity-arr': number;
   currency: string;
-  currency_sign: string;
+  'customer-name': string;
+  'customer-uuid': string;
+  'customer-external-id': string;
+  'subscription-external-id'?: string;
+  'plan-external-id'?: string;
+}
+
+export interface EnrichedActivity extends Activity {
+  'customer-since'?: string;
+  'customer-tenure-months'?: number;
 }
 
 export interface PaginatedResponse<T> {

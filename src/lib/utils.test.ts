@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { convertCentsToDollars } from './utils.js';
 
 describe('convertCentsToDollars', () => {
-  it('converts explicit _in_cents fields', () => {
+  it('converts _in_cents fields and strips suffix', () => {
     const input = {
       amount_in_cents: 1500,
       discount_amount_in_cents: 200,
@@ -10,9 +10,9 @@ describe('convertCentsToDollars', () => {
     };
     const output = convertCentsToDollars(input);
     expect(output).toEqual({
-      amount_in_cents: 15,
-      discount_amount_in_cents: 2,
-      tax_amount_in_cents: 1,
+      amount: 15,
+      discount_amount: 2,
+      tax_amount: 1,
     });
   });
 
@@ -31,6 +31,20 @@ describe('convertCentsToDollars', () => {
       activity_mrr: 50,
       activity_arr: 600,
       activity_mrr_movement: 10,
+    });
+  });
+
+  it('converts hyphenated activity fields', () => {
+    const input = {
+      'activity-mrr': 5000,
+      'activity-arr': 60000,
+      'activity-mrr-movement': 1000,
+    };
+    const output = convertCentsToDollars(input);
+    expect(output).toEqual({
+      'activity-mrr': 50,
+      'activity-arr': 600,
+      'activity-mrr-movement': 10,
     });
   });
 
@@ -96,9 +110,9 @@ describe('convertCentsToDollars', () => {
     expect(output).toEqual([{ mrr: 10 }, { mrr: 20 }]);
   });
 
-  it('handles fields ending with _in_cents suffix', () => {
+  it('strips _in_cents suffix from custom fields', () => {
     const input = { custom_amount_in_cents: 5000 };
     const output = convertCentsToDollars(input);
-    expect(output).toEqual({ custom_amount_in_cents: 50 });
+    expect(output).toEqual({ custom_amount: 50 });
   });
 });

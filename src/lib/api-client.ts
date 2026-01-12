@@ -9,11 +9,19 @@ import type {
   Invoice,
   MetricsResponse,
   Activity,
+  EnrichedActivity,
   CustomerListResponse,
   PaginatedResponse,
 } from '../types/index.js';
 
 const API_BASE = 'https://api.chartmogul.com/v1';
+const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
+
+function calculateTenureMonths(activityDate: string, customerSince: string): number {
+  return Math.round(
+    (new Date(activityDate).getTime() - new Date(customerSince).getTime()) / MS_PER_MONTH
+  );
+}
 
 export class ChartMogulClient {
   private getAuthHeader(): string {
@@ -122,6 +130,13 @@ export class ChartMogulClient {
     });
   }
 
+  async getCustomersBatch(uuids: string[]): Promise<Customer[]> {
+    const results = await Promise.all(
+      uuids.map((uuid) => this.getCustomer(uuid).catch(() => null))
+    );
+    return results.filter((c): c is Customer => c !== null);
+  }
+
   async getCustomerActivities(uuid: string, params: { page?: number; per_page?: number } = {}) {
     return this.request<PaginatedResponse<Activity>>('GET', `/customers/${uuid}/activities`, {
       params,
@@ -210,6 +225,44 @@ export class ChartMogulClient {
     } = {}
   ) {
     return this.request<PaginatedResponse<Activity>>('GET', '/activities', { params });
+  }
+
+  async listActivitiesEnriched(
+    params: {
+      'start-date'?: string;
+      'end-date'?: string;
+      type?: string;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<PaginatedResponse<EnrichedActivity>> {
+    const activities = await this.listActivities(params);
+
+    const uniqueCustomerUuids = [
+      ...new Set(activities.entries.map((a) => a['customer-uuid']).filter(Boolean)),
+    ];
+
+    const customers = await this.getCustomersBatch(uniqueCustomerUuids);
+    const customerMap = new Map(customers.map((c) => [c.uuid, c]));
+
+    const enrichedEntries: EnrichedActivity[] = activities.entries.map((activity) => {
+      const customer = customerMap.get(activity['customer-uuid']);
+      const customerSince = customer?.['customer-since'] ?? customer?.customer_since;
+      const tenureMonths = customerSince
+        ? calculateTenureMonths(activity.date, customerSince)
+        : undefined;
+
+      return {
+        ...activity,
+        'customer-since': customerSince,
+        'customer-tenure-months': tenureMonths,
+      };
+    });
+
+    return {
+      ...activities,
+      entries: enrichedEntries,
+    };
   }
 }
 
