@@ -5,6 +5,23 @@ import { client } from '../lib/api-client.js';
 import { auth } from '../lib/auth.js';
 import { convertCentsToDollars } from '../lib/utils.js';
 
+const toolRegistry = [
+  { name: 'get_all_metrics', description: 'Get all revenue metrics (MRR, ARR, ARPA, churn rates, LTV, customer count) for a date range' },
+  { name: 'get_mrr', description: 'Get Monthly Recurring Revenue (MRR) for a date range' },
+  { name: 'get_arr', description: 'Get Annual Recurring Revenue (ARR) for a date range' },
+  { name: 'get_customer_churn_rate', description: 'Get customer churn rate for a date range' },
+  { name: 'get_mrr_churn_rate', description: 'Get MRR churn rate for a date range' },
+  { name: 'list_activities', description: 'List subscription activities (new business, expansion, contraction, churn)' },
+  { name: 'search_customers', description: 'Search for customers by email address' },
+  { name: 'get_customer', description: 'Get detailed information about a specific customer' },
+  { name: 'get_customers_batch', description: 'Get detailed information about multiple customers in one call' },
+  { name: 'get_customer_activities', description: 'Get subscription activities for a specific customer' },
+  { name: 'get_customer_subscriptions', description: 'Get active subscriptions for a specific customer' },
+  { name: 'list_customers', description: 'List all customers with optional filtering' },
+  { name: 'get_account', description: 'Get ChartMogul account information' },
+  { name: 'check_auth', description: 'Check if ChartMogul authentication is configured' },
+];
+
 const server = new McpServer({
   name: 'chartmogul',
   version: '1.0.0',
@@ -171,6 +188,23 @@ server.tool(
   'Check if ChartMogul authentication is configured',
   {},
   async () => jsonResponse({ authenticated: auth.isAuthenticated() })
+);
+
+server.tool(
+  'search_tools',
+  'Search for available tools by name or description using regex. Returns matching tool names.',
+  {
+    query: z.string().describe('Regex pattern to match against tool names and descriptions (case-insensitive)'),
+  },
+  async ({ query }) => {
+    try {
+      const pattern = new RegExp(query, 'i');
+      const matches = toolRegistry.filter((t) => pattern.test(t.name) || pattern.test(t.description));
+      return jsonResponse({ tools: matches });
+    } catch {
+      return jsonResponse({ error: 'Invalid regex pattern' });
+    }
+  }
 );
 
 export async function runMcpServer() {
