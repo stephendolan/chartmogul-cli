@@ -12,9 +12,19 @@ import type {
   EnrichedActivity,
   CustomerListResponse,
   PaginatedResponse,
+  CursorPaginatedResponse,
 } from '../types/index.js';
 
 const API_BASE = 'https://api.chartmogul.com/v1';
+
+type ActivityListParams = {
+  'start-date'?: string;
+  'end-date'?: string;
+  type?: string;
+  cursor?: string;
+  'per-page'?: number;
+};
+
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
 
 function calculateTenureMonths(activityDate: string, customerSince: string): number {
@@ -215,27 +225,13 @@ export class ChartMogulClient {
     return this.request<MetricsResponse>('GET', '/metrics/all', { params });
   }
 
-  async listActivities(
-    params: {
-      'start-date'?: string;
-      'end-date'?: string;
-      type?: string;
-      page?: number;
-      per_page?: number;
-    } = {}
-  ) {
-    return this.request<PaginatedResponse<Activity>>('GET', '/activities', { params });
+  async listActivities(params: ActivityListParams = {}) {
+    return this.request<CursorPaginatedResponse<Activity>>('GET', '/activities', { params });
   }
 
   async listActivitiesEnriched(
-    params: {
-      'start-date'?: string;
-      'end-date'?: string;
-      type?: string;
-      page?: number;
-      per_page?: number;
-    } = {}
-  ): Promise<PaginatedResponse<EnrichedActivity>> {
+    params: ActivityListParams = {}
+  ): Promise<CursorPaginatedResponse<EnrichedActivity>> {
     const activities = await this.listActivities(params);
 
     const uniqueCustomerUuids = [
