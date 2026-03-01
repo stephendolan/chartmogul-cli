@@ -12,7 +12,7 @@ export function createActivitiesCommand(): Command {
     .option('--start-date <date>', 'Start date (YYYY-MM-DD)')
     .option('--end-date <date>', 'End date (YYYY-MM-DD)')
     .option('--type <type>', 'Activity type (new_biz, expansion, contraction, churn, reactivation)')
-    .option('--page <number>', 'Page number')
+    .option('--cursor <cursor>', 'Cursor for next page (from previous response)')
     .option('--per-page <number>', 'Results per page')
     .option('--enrich', 'Include customer tenure data (customer-since, customer-tenure-months)')
     .action(
@@ -21,7 +21,7 @@ export function createActivitiesCommand(): Command {
           startDate?: string;
           endDate?: string;
           type?: string;
-          page?: string;
+          cursor?: string;
           perPage?: string;
           enrich?: boolean;
         }) => {
@@ -29,8 +29,8 @@ export function createActivitiesCommand(): Command {
             'start-date': options.startDate,
             'end-date': options.endDate,
             type: options.type,
-            page: options.page ? parseInt(options.page, 10) : undefined,
-            per_page: options.perPage ? parseInt(options.perPage, 10) : undefined,
+            cursor: options.cursor,
+            'per-page': options.perPage ? parseInt(options.perPage, 10) : undefined,
           };
           const result = options.enrich
             ? await client.listActivitiesEnriched(params)

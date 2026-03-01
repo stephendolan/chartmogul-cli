@@ -169,12 +169,12 @@ server.tool(
       .enum(['new-biz', 'expansion', 'contraction', 'churn', 'reactivation'])
       .optional()
       .describe('Activity type filter'),
-    page: z.number().optional().describe('Page number'),
+    cursor: z.string().optional().describe('Cursor for next page (from previous response)'),
     perPage: z.number().optional().describe('Results per page'),
     enrich: z.boolean().optional().describe('Include customer tenure data (customer-since, customer-tenure-months)'),
   },
-  async ({ startDate, endDate, type, page, perPage, enrich }) => {
-    const params = { 'start-date': startDate, 'end-date': endDate, type, page, per_page: perPage };
+  async ({ startDate, endDate, type, cursor, perPage, enrich }) => {
+    const params = { 'start-date': startDate, 'end-date': endDate, type, cursor, 'per-page': perPage };
     const result = enrich
       ? await client.listActivitiesEnriched(params)
       : await client.listActivities(params);

@@ -174,6 +174,13 @@ export interface PaginatedResponse<T> {
   total_pages?: number;
 }
 
+export interface CursorPaginatedResponse<T> {
+  entries: T[];
+  has_more: boolean;
+  per_page: number;
+  cursor: string;
+}
+
 export interface CustomerListResponse {
   entries: Customer[];
   has_more: boolean;
