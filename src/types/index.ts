@@ -82,6 +82,8 @@ export interface Subscription {
   customer_uuid: string;
   data_source_uuid: string;
   cancellation_dates: string[];
+  mrr: number;
+  arr: number;
 }
 
 export interface Invoice {
