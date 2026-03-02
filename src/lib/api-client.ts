@@ -33,6 +33,32 @@ function calculateTenureMonths(activityDate: string, customerSince: string): num
   );
 }
 
+type CustomerLookupParams = {
+  by: 'uuid' | 'email' | 'external_id' | 'name';
+  value: string;
+};
+
+type CustomerLookupFields = {
+  uuid?: string;
+  externalId?: string;
+  email?: string;
+  name?: string;
+};
+
+const LOOKUP_PRIORITY: { field: keyof CustomerLookupFields; by: CustomerLookupParams['by'] }[] = [
+  { field: 'uuid', by: 'uuid' },
+  { field: 'externalId', by: 'external_id' },
+  { field: 'email', by: 'email' },
+  { field: 'name', by: 'name' },
+];
+
+export function resolveCustomerLookup(fields: CustomerLookupFields): CustomerLookupParams | null {
+  for (const { field, by } of LOOKUP_PRIORITY) {
+    if (fields[field]) return { by, value: fields[field] };
+  }
+  return null;
+}
+
 export class ChartMogulClient {
   private getAuthHeader(): string {
     const apiKey = auth.getApiKey();
@@ -227,6 +253,51 @@ export class ChartMogulClient {
 
   async listActivities(params: ActivityListParams = {}) {
     return this.request<CursorPaginatedResponse<Activity>>('GET', '/activities', { params });
+  }
+
+  async customerLookup(params: CustomerLookupParams) {
+    let customer: Customer;
+
+    switch (params.by) {
+      case 'uuid': {
+        customer = await this.getCustomer(params.value);
+        break;
+      }
+      case 'external_id': {
+        const result = await this.listCustomers({ external_id: params.value });
+        if (result.entries.length === 0) {
+          throw new ChartMogulCliError(`No customer found with external_id: ${params.value}`, 404);
+        }
+        customer = result.entries[0];
+        break;
+      }
+      case 'email': {
+        const result = await this.searchCustomers(params.value);
+        if (result.entries.length === 0) {
+          throw new ChartMogulCliError(`No customer found with email: ${params.value}`, 404);
+        }
+        customer = result.entries[0];
+        break;
+      }
+      case 'name': {
+        const result = await this.listCustomers();
+        const match = result.entries.find(
+          (c) => c.name?.toLowerCase() === params.value.toLowerCase()
+        );
+        if (!match) {
+          throw new ChartMogulCliError(`No customer found with name: ${params.value}`, 404);
+        }
+        customer = match;
+        break;
+      }
+    }
+
+    const subscriptions = await this.getCustomerSubscriptions(customer.uuid);
+
+    return {
+      customer,
+      subscriptions: subscriptions.entries,
+    };
   }
 
   async listActivitiesEnriched(
