@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { client } from '../lib/api-client.js';
+import { client, resolveCustomerLookup } from '../lib/api-client.js';
 import { auth } from '../lib/auth.js';
 import { convertCentsToDollars } from '../lib/utils.js';
 
@@ -30,6 +30,7 @@ const toolRegistry = [
   { name: 'get_data_source', description: 'Get detailed information about a specific data source' },
   { name: 'get_account', description: 'Get ChartMogul account information' },
   { name: 'check_auth', description: 'Check if ChartMogul authentication is configured' },
+  { name: 'customer_lookup', description: 'Look up a customer with subscriptions by UUID, email, external ID, or name in a single call' },
 ];
 
 const server = new McpServer({
@@ -302,6 +303,25 @@ server.tool(
   'Check if ChartMogul authentication is configured',
   {},
   async () => jsonResponse({ authenticated: auth.isAuthenticated() })
+);
+
+server.tool(
+  'customer_lookup',
+  'Look up a customer with subscriptions by UUID, email, external ID, or name in a single call',
+  {
+    uuid: z.string().optional().describe('Customer UUID (highest priority)'),
+    externalId: z.string().optional().describe('Customer external ID'),
+    email: z.string().optional().describe('Customer email address'),
+    name: z.string().optional().describe('Customer name (lowest priority, client-side filtered)'),
+  },
+  async ({ uuid, externalId, email, name }) => {
+    const lookup = resolveCustomerLookup({ uuid, externalId, email, name });
+    if (!lookup) {
+      return jsonResponse({ error: 'Provide one of: uuid, externalId, email, or name' });
+    }
+
+    return jsonResponse(await client.customerLookup(lookup));
+  }
 );
 
 server.tool(

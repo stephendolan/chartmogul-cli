@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { client } from '../lib/api-client.js';
+import { client, resolveCustomerLookup } from '../lib/api-client.js';
 import { config } from '../lib/config.js';
 import { outputJson } from '../lib/output.js';
 import { withErrorHandling } from '../lib/command-utils.js';
@@ -72,6 +72,27 @@ export function createCustomersCommand(): Command {
         });
         outputJson(result);
       })
+    );
+
+  cmd
+    .command('lookup')
+    .description('Look up a customer with subscriptions by UUID, email, external ID, or name')
+    .option('--uuid <uuid>', 'Customer UUID')
+    .option('--email <email>', 'Customer email address')
+    .option('--external-id <id>', 'Customer external ID')
+    .option('--name <name>', 'Customer name')
+    .action(
+      withErrorHandling(
+        async (options: { uuid?: string; email?: string; externalId?: string; name?: string }) => {
+          const lookup = resolveCustomerLookup(options);
+          if (!lookup) {
+            throw new Error('Provide one of --uuid, --email, --external-id, or --name');
+          }
+
+          const result = await client.customerLookup(lookup);
+          outputJson(result);
+        }
+      )
     );
 
   cmd
