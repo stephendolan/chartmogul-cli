@@ -39,7 +39,7 @@ export function createCustomersCommand(): Command {
   cmd
     .command('view')
     .description('View a customer')
-    .argument('<uuid>', 'Customer UUID')
+    .argument('<uuid>', 'ChartMogul customer UUID (cus_xxx format)')
     .action(
       withErrorHandling(async (uuid: string) => {
         const customer = await client.getCustomer(uuid);

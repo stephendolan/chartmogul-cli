@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { ChartMogulClient } from './api-client.js';
+import { ChartMogulClient, isValidCustomerUuid } from './api-client.js';
 import { ChartMogulCliError } from './errors.js';
 
 vi.mock('./auth.js', () => ({
@@ -32,6 +32,55 @@ const mockSubscription = {
   mrr: 49900,
   arr: 598800,
 };
+
+describe('isValidCustomerUuid', () => {
+  it('accepts cus_ prefixed IDs', () => {
+    expect(isValidCustomerUuid('cus_a1b2c3d4')).toBe(true);
+    expect(isValidCustomerUuid('cus_test-uuid')).toBe(true);
+    expect(isValidCustomerUuid('cus_abc123-def456')).toBe(true);
+  });
+
+  it('accepts standard UUIDs', () => {
+    expect(isValidCustomerUuid('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
+    expect(isValidCustomerUuid('A550E840-E29B-41D4-A716-446655440000')).toBe(true);
+  });
+
+  it('rejects slug-format IDs from ChartMogul URLs', () => {
+    expect(isValidCustomerUuid('293549973-Alens_Team')).toBe(false);
+    expect(isValidCustomerUuid('123456789-Some_Company')).toBe(false);
+  });
+
+  it('rejects plain numbers', () => {
+    expect(isValidCustomerUuid('293549973')).toBe(false);
+  });
+
+  it('rejects arbitrary strings', () => {
+    expect(isValidCustomerUuid('not-a-uuid')).toBe(false);
+    expect(isValidCustomerUuid('')).toBe(false);
+  });
+});
+
+describe('getCustomer validation', () => {
+  let client: ChartMogulClient;
+
+  beforeEach(() => {
+    client = new ChartMogulClient();
+    vi.restoreAllMocks();
+  });
+
+  it('rejects slug-format IDs with a helpful error', async () => {
+    await expect(client.getCustomer('293549973-Alens_Team')).rejects.toThrow(ChartMogulCliError);
+    await expect(client.getCustomer('293549973-Alens_Team')).rejects.toThrow(
+      /Invalid customer ID format.*list_customers with external_id/
+    );
+  });
+
+  it('accepts cus_ prefixed IDs', async () => {
+    vi.spyOn(client as any, 'request').mockResolvedValue(mockCustomer);
+    const result = await client.getCustomer('cus_test-uuid');
+    expect(result).toEqual(mockCustomer);
+  });
+});
 
 describe('customerLookup', () => {
   let client: ChartMogulClient;
