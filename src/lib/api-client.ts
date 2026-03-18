@@ -27,6 +27,16 @@ type ActivityListParams = {
 
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
 
+// ChartMogul UUIDs are "cus_" followed by a hex-ish identifier (e.g. cus_a1b2c3d4-...)
+// Standard UUIDs (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) are also accepted.
+// Slug-format IDs from ChartMogul URLs (e.g. "293549973-Alens_Team") are NOT valid.
+const CHARTMOGUL_UUID_PATTERN = /^cus_/;
+const STANDARD_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidCustomerUuid(id: string): boolean {
+  return CHARTMOGUL_UUID_PATTERN.test(id) || STANDARD_UUID_PATTERN.test(id);
+}
+
 function calculateTenureMonths(activityDate: string, customerSince: string): number {
   return Math.round(
     (new Date(activityDate).getTime() - new Date(customerSince).getTime()) / MS_PER_MONTH
@@ -157,6 +167,12 @@ export class ChartMogulClient {
   }
 
   async getCustomer(uuid: string) {
+    if (!isValidCustomerUuid(uuid)) {
+      throw new ChartMogulCliError(
+        `Invalid customer ID format: "${uuid}". Expected a ChartMogul UUID (cus_xxx). To find a customer by Stripe ID, use list_customers with external_id.`,
+        400
+      );
+    }
     return this.request<Customer>('GET', `/customers/${uuid}`);
   }
 

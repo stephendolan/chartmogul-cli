@@ -17,7 +17,7 @@ const toolRegistry = [
   { name: 'get_ltv', description: 'Get Customer Lifetime Value (LTV) for a date range' },
   { name: 'list_activities', description: 'List subscription activities (new business, expansion, contraction, churn)' },
   { name: 'search_customers', description: 'Search for customers by email address' },
-  { name: 'get_customer', description: 'Get detailed information about a specific customer' },
+  { name: 'get_customer', description: 'Get detailed information about a specific customer by ChartMogul UUID (cus_xxx). For Stripe IDs, use list_customers with externalId.' },
   { name: 'get_customers_batch', description: 'Get detailed information about multiple customers in one call' },
   { name: 'get_customer_activities', description: 'Get subscription activities for a specific customer' },
   { name: 'get_customer_subscriptions', description: 'Get active subscriptions for a specific customer' },
@@ -192,8 +192,8 @@ server.tool(
 
 server.tool(
   'get_customer',
-  'Get detailed information about a specific customer',
-  { uuid: z.string().describe('Customer UUID') },
+  'Get detailed information about a specific customer by ChartMogul UUID (cus_xxx). For Stripe IDs, use list_customers with externalId.',
+  { uuid: z.string().describe('ChartMogul customer UUID (cus_xxx format). Slug IDs from ChartMogul URLs won\'t work — use list_customers with external_id for Stripe customer IDs instead.') },
   async ({ uuid }) => jsonResponse(await client.getCustomer(uuid))
 );
 
